@@ -13,7 +13,7 @@ numbers per layer, per token, with no optimiser.
 
 | Milestone | What | Status |
 |---|---|---|
-| 1 | The mechanism on any mlx-lm decoder with `q_proj`/`o_proj` (Qwen2/2.5, Qwen3, …), randomly initialised sidecar, with a test suite that proves the hooks are in the right place: β ≡ 0 recovers the vanilla model **bit-for-bit**, in prefill and in KV-cached decode. | ✅ GREEN on tiny random Qwen2 + Qwen3 (`tests/test_identity.py`, no download, ~10 s) On Qwen2.5-7B-Instruct-4bit (28 layers, 4,817,120 sidecar params, M-series Mac, 2026-09-16): 7 of 8 GREEN on the first run; DECODE showed a 0.055-logit prefill-vs-decode gap from bf16 sidecar math — sidecar moved to fp32, re-run pending. |
+| 1 | The mechanism on any mlx-lm decoder with `q_proj`/`o_proj` (Qwen2/2.5, Qwen3, …), randomly initialised sidecar, with a test suite that proves the hooks are in the right place: β ≡ 0 recovers the vanilla model **bit-for-bit**, in prefill and in KV-cached decode. | ✅ GREEN on tiny random Qwen2 + Qwen3 (`tests/test_identity.py`, no download, ~10 s) On Qwen2.5-7B-Instruct-4bit (28 layers, 4,817,120 sidecar params, M-series Mac, 2026-09-16): all 8 GREEN (DECODE gap 0.043 vs the vanilla model's own prefill-vs-decode kernel gap of 0.039). |
 | 2 | Load the authors' trained Qwen3-4B sidecar (via the community MLX conversion, see below) and reproduce one published item against the CUDA reference. | ⬜ Loader written (`load_release_adapter`), **nothing verified**. Needs the weights and one GPU run for ground truth. |
 | 3 | Train a sidecar for a different backbone (e.g. Qwen2.5-7B) on MLX. | ⬜ Not started. A GPU-cluster SFT run in the paper; hours-to-a-day per epoch on one Mac. |
 
@@ -130,5 +130,5 @@ PROMPT-for-claude-code.md  what to hand Claude Code on the Mac if the real-model
 
 ## License
 
-TBD by the author (MIT suggested). The authors' δ-mem weights are CC-BY-4.0 and are not
+MIT (see LICENSE). The authors' δ-mem weights are CC-BY-4.0 and are not
 redistributed here.
