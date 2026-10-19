@@ -352,14 +352,13 @@ def load_release_adapter(model, adapter_dir: str):
         raise NotImplementedError("adapter carries lambda_proj; only coupled λ = 1 − β is implemented")
     cfg.layers = sorted(groups)
     attach(model, cfg)
-    flat = []
+    weights = {}
     for i, g in groups.items():
         for rel, ours in _RELEASE_TO_OURS.items():
             if rel not in g:
                 raise ValueError(f"layer {i}: missing {rel}")
-            flat.append((f"{_layer_prefix(model)}.{i}.self_attn.delta_mem.{ours}", g[rel].astype(mx.float32)))
-    model.load_weights(flat, strict=False)
-    mx.eval(model.parameters())
+            weights[f"{_layer_prefix(model)}.{i}.self_attn.delta_mem.{ours}"] = g[rel].astype(mx.float32)
+    _load_sidecar_weights(model, weights)
     return cfg
 
 
@@ -372,5 +371,34 @@ def load_sidecar(model, path: str):
     checkpoint into this layout is milestone 2 (scripts/convert_authors_checkpoint.py,
     not written yet)."""
     weights = mx.load(os.path.join(path, "sidecar.safetensors"))
-    model.load_weights(list(weights.items()), strict=False)
+    _load_sidecar_weights(model, dict(weights))
+
+
+def _load_sidecar_weights(model, weights: Dict[str, mx.array]):
+    """Strict load of {full parameter name: array} into the attached sidecars.
+
+    model.load_weights(..., strict=True) cannot be used for this: strict checks the given
+    keys against the model's WHOLE parameter tree, and a sidecar file never carries the
+    backbone, so it would always fail with "Missing N parameters". So the check is made
+    against the sidecar parameters only, and every layer's Sidecar module then loads its own
+    tensors with strict=True. The error message is the explicit report — every missing,
+    unexpected and mis-shaped key, over all layers — and nothing is loaded unless the whole
+    set is right.
+    """
+    expected = sidecar_parameters(model)   # empty if attach() was not called → everything is unexpected
+    missing = sorted(set(expected) - set(weights))
+    unexpected = sorted(set(weights) - set(expected))
+    mismatch = sorted((k, tuple(expected[k].shape), tuple(weights[k].shape))
+                      for k in set(expected) & set(weights) if expected[k].shape != weights[k].shape)
+    if missing or unexpected or mismatch:
+        raise ValueError(f"sidecar weights do not match the attached sidecars: "
+                         f"{len(missing)} missing of {len(expected)} expected {missing}; "
+                         f"{len(unexpected)} unexpected of {len(weights)} provided {unexpected}; "
+                         f"{len(mismatch)} shape mismatches {mismatch}")
+    for i, layer in enumerate(_layers(model)):
+        attn = _attn(layer)
+        if hasattr(attn, "delta_mem"):
+            prefix = f"{_layer_prefix(model)}.{i}.self_attn.delta_mem."
+            attn.delta_mem.load_weights([(k[len(prefix):], v) for k, v in weights.items()
+                                         if k.startswith(prefix)], strict=True)
     mx.eval(model.parameters())
