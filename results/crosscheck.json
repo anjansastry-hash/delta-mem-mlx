@@ -1,6 +1,6 @@
 {
   "kind": "delta-mem-mlx crosscheck: this repo vs elimaine/delta-mem-mlx-sidecar",
-  "timestamp": "2026-10-19T09:45:12-0400",
+  "timestamp": "2026-10-19T10:26:45-0400",
   "machine": {
     "platform": "macOS-26.4.1-arm64-arm-64bit-Mach-O",
     "machine": "arm64",
@@ -88,9 +88,9 @@
   },
   "this_repo": {
     "path": "/Users/sailaupadhyayula/ror/delta-mem-mlx",
-    "commit": "2990eaca4d67cd4fe57d2d66f98e9227fadef993",
+    "commit": "5747978bb9466a69b94dc32383e48edd739d2afb",
     "dirty": true,
-    "head": "2990eac milestone 2a: release adapter loads on Qwen3-4B-Instruct-2507 (zero missing/unexpected keys); test_release_adapter.py",
+    "head": "5747978 milestone 2b: strict per-module loader; cross-check vs independent MLX port (bit-identical); short-context persistence protocol (no memory effect beyond adapter)",
     "note": "dirty = uncommitted changes in the working tree at run time"
   },
   "reference": {
@@ -154,7 +154,7 @@
       "alpha": 16.0,
       "scaling": 2.0,
       "normalize_qk": true,
-      "load_s": 0.32
+      "load_s": 0.34
     },
     "port_b": {
       "module": "/Users/sailaupadhyayula/ror/_ref/delta-mem-mlx-sidecar/delta-mem-sidecar/src/delta_mem_sidecar/__init__.py",
@@ -269,7 +269,7 @@
         "top1_logit_b": 27.5,
         "all_positions_max_abs_delta": 0.0,
         "all_positions_argmax_agreement": 1.0,
-        "forward_s_a": 0.041,
+        "forward_s_a": 0.04,
         "forward_s_b": 0.036
       },
       "layers": [
@@ -922,8 +922,8 @@
         "top1_logit_b": 20.75,
         "all_positions_max_abs_delta": 0.0,
         "all_positions_argmax_agreement": 1.0,
-        "forward_s_a": 0.075,
-        "forward_s_b": 0.073
+        "forward_s_a": 0.076,
+        "forward_s_b": 0.072
       },
       "layers": [
         {
@@ -1544,7 +1544,7 @@
         "all_positions_max_abs_delta": 0.0,
         "all_positions_argmax_agreement": 1.0,
         "forward_s_a": 0.036,
-        "forward_s_b": 0.036
+        "forward_s_b": 0.035
       },
       "layers": [
         {

@@ -1,0 +1,626 @@
+{
+  "kind": "delta-mem-mlx long-context persistence experiment (Part E)",
+  "status": "ok",
+  "timestamp": "2026-10-19T10:26:04-0400",
+  "machine": {
+    "platform": "macOS-26.4.1-arm64-arm-64bit-Mach-O",
+    "python": "3.14.4",
+    "mlx": "0.32.3",
+    "mlx_lm": "0.32.0"
+  },
+  "base_model": "/Users/sailaupadhyayula/mlx-models/Qwen3-4B-Instruct-2507-4bit",
+  "adapter": {
+    "dir": "/Users/sailaupadhyayula/mlx-models/delta-mem-qwen3-4b-adapter",
+    "npz_sha256": "563c66de92b19ef45aba21edd2eaac2fbf0b0c3878ddb21ccfe7e78801b3ba7e",
+    "config_sha256": "4d1a46c0ec11b0779ab6b1242b3dac6c4141b2841a6e0314219faafa3025f8bc"
+  },
+  "this_repo": {
+    "commit": "5747978bb9466a69b94dc32383e48edd739d2afb",
+    "dirty": true,
+    "head": "5747978 milestone 2b: strict per-module loader; cross-check vs independent MLX port (bit-identical); short-context persistence protocol (no memory effect beyond adapter)"
+  },
+  "facts_from": {
+    "path": "results/persistence.json",
+    "sha256": "24ca3613de26e98d2d44989598de92c1e8bba2ccf8657fae9a4e6b81c3b81ed7"
+  },
+  "memo": {
+    "path": "results/memo.txt",
+    "source": "written to results/memo.txt (first run)",
+    "sha256": "f7dc824fca6dfca0b0145bf327b67c017d9cb07e29aa2994709bbd0af9cb2bcf",
+    "words": 1675,
+    "content_tokens": 2005,
+    "rendered_ids": 2010,
+    "rendered_head": "<|im_start|>user\nINTERNAL MEMO — Platform Operations\nTo: Site reliability, netwo"
+  },
+  "protocol": {
+    "turn1": "one user message holding the memo; chat template, user turn, no assistant header; prefill only, sidecar live, fresh state",
+    "turn2": "fresh prompt without the memo: the Part C question verbatim; chat template, user turn + assistant header; fresh KV cache",
+    "arms": {
+      "vanilla": "no sidecar attached (run before the adapter is loaded)",
+      "sidecar": "state after the memo prefill carried into turn 2 with get_states/set_states",
+      "reset": "sidecar attached, state reset to zero between the turns"
+    },
+    "logprob": "log-softmax at the last position of turn 2, of the first token of the answer tokenised on its own",
+    "greedy": "argmax decoding, max 8 tokens, stop at EOS; hit = answer contained in the output, case-insensitive",
+    "fixed": "protocol and memo fixed before the first run; not tuned afterwards",
+    "sidecar_config": {
+      "r": 8,
+      "alpha": 16.0,
+      "layers": 36
+    }
+  },
+  "facts": [
+    {
+      "name": "varuna-codename",
+      "statement": "The codename of the Varuna project is Kestrel-7.",
+      "question": "What is the codename of the Varuna project? Answer with the codename only.",
+      "answer": "Kestrel-7",
+      "turn2_rendered": "<|im_start|>user\nWhat is the codename of the Varuna project? Answer with the codename only.<|im_end|>\n<|im_start|>assistant\n",
+      "turn2_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        20329,
+        1840,
+        315,
+        279,
+        8735,
+        8565,
+        2390,
+        30,
+        21806,
+        448,
+        279,
+        20329,
+        1840,
+        1172,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "answer_ids": [
+        42,
+        477,
+        3748,
+        12,
+        22
+      ],
+      "answer_tokens": [
+        "K",
+        "est",
+        "rel",
+        "-",
+        "7"
+      ],
+      "first_answer_token": 42,
+      "answer_in_memo": true,
+      "statement_verbatim_in_memo": false,
+      "arms": {
+        "vanilla": {
+          "logprob_first": -6.26220703125,
+          "prob_first": 0.001907032268837133,
+          "rank_first": 9,
+          "top1_id": 32,
+          "top1_text": "A",
+          "top1_logprob": -0.26220703125,
+          "greedy_ids": [
+            32,
+            46242
+          ],
+          "greedy_text": "Agni",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "sidecar": {
+          "logprob_first": -3.9724597930908203,
+          "prob_first": 0.018827065445566116,
+          "rank_first": 10,
+          "top1_id": 32,
+          "top1_text": "A",
+          "top1_logprob": -1.4724597930908203,
+          "greedy_ids": [
+            32,
+            46242
+          ],
+          "greedy_text": "Agni",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "reset": {
+          "logprob_first": -3.9347763061523438,
+          "prob_first": 0.01955007206922192,
+          "rank_first": 9,
+          "top1_id": 32,
+          "top1_text": "A",
+          "top1_logprob": -1.3097763061523438,
+          "greedy_ids": [
+            32,
+            46242
+          ],
+          "greedy_text": "Agni",
+          "greedy_hit": false,
+          "greedy_exact": false
+        }
+      }
+    },
+    {
+      "name": "halvorsen-password",
+      "statement": "The password for the Halvorsen archive is tangerine-moss.",
+      "question": "What is the password for the Halvorsen archive? Answer with the password only.",
+      "answer": "tangerine-moss",
+      "turn2_rendered": "<|im_start|>user\nWhat is the password for the Halvorsen archive? Answer with the password only.<|im_end|>\n<|im_start|>assistant\n",
+      "turn2_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        3552,
+        369,
+        279,
+        19851,
+        85,
+        1087,
+        268,
+        18132,
+        30,
+        21806,
+        448,
+        279,
+        3552,
+        1172,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "answer_ids": [
+        83,
+        4003,
+        482,
+        1448,
+        3662
+      ],
+      "answer_tokens": [
+        "t",
+        "anger",
+        "ine",
+        "-m",
+        "oss"
+      ],
+      "first_answer_token": 83,
+      "answer_in_memo": true,
+      "statement_verbatim_in_memo": false,
+      "arms": {
+        "vanilla": {
+          "logprob_first": -19.000247955322266,
+          "prob_first": 5.601407366561897e-09,
+          "rank_first": 89,
+          "top1_id": 40,
+          "top1_text": "I",
+          "top1_logprob": -0.000247955322265625,
+          "greedy_ids": [
+            40,
+            4157,
+            3410,
+            279,
+            3552,
+            369,
+            279,
+            19851
+          ],
+          "greedy_text": "I cannot provide the password for the Hal",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "sidecar": {
+          "logprob_first": -5.294101715087891,
+          "prob_first": 0.005021122749092473,
+          "rank_first": 35,
+          "top1_id": 40,
+          "top1_text": "I",
+          "top1_logprob": -2.2316017150878906,
+          "greedy_ids": [
+            40,
+            1513,
+            944,
+            1414,
+            279,
+            3552,
+            369,
+            279
+          ],
+          "greedy_text": "I don't know the password for the",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "reset": {
+          "logprob_first": -5.554805755615234,
+          "prob_first": 0.0038688198931443813,
+          "rank_first": 39,
+          "top1_id": 40,
+          "top1_text": "I",
+          "top1_logprob": -1.5548057556152344,
+          "greedy_ids": [
+            40,
+            4157,
+            3410,
+            279,
+            3552,
+            369,
+            279,
+            19851
+          ],
+          "greedy_text": "I cannot provide the password for the Hal",
+          "greedy_hit": false,
+          "greedy_exact": false
+        }
+      }
+    },
+    {
+      "name": "orrery-oncall",
+      "statement": "The on-call engineer for the Orrery cluster is Priyanka Vashti.",
+      "question": "Who is the on-call engineer for the Orrery cluster? Answer with the name only.",
+      "answer": "Priyanka Vashti",
+      "turn2_rendered": "<|im_start|>user\nWho is the on-call engineer for the Orrery cluster? Answer with the name only.<|im_end|>\n<|im_start|>assistant\n",
+      "turn2_ids": [
+        151644,
+        872,
+        198,
+        15191,
+        374,
+        279,
+        389,
+        58897,
+        23576,
+        369,
+        279,
+        86019,
+        722,
+        10652,
+        30,
+        21806,
+        448,
+        279,
+        829,
+        1172,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "answer_ids": [
+        92878,
+        88,
+        26671,
+        52834,
+        94848
+      ],
+      "answer_tokens": [
+        "Pri",
+        "y",
+        "anka",
+        " Vas",
+        "hti"
+      ],
+      "first_answer_token": 92878,
+      "answer_in_memo": true,
+      "statement_verbatim_in_memo": false,
+      "arms": {
+        "vanilla": {
+          "logprob_first": -14.158409118652344,
+          "prob_first": 7.097102004232974e-07,
+          "rank_first": 419,
+          "top1_id": 785,
+          "top1_text": "The",
+          "top1_logprob": -0.5959091186523438,
+          "greedy_ids": [
+            785,
+            389,
+            58897,
+            23576,
+            369,
+            279,
+            86019,
+            722
+          ],
+          "greedy_text": "The on-call engineer for the Orrery",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "sidecar": {
+          "logprob_first": -8.308063507080078,
+          "prob_first": 0.0002465209675411674,
+          "rank_first": 293,
+          "top1_id": 50,
+          "top1_text": "S",
+          "top1_logprob": -2.620563507080078,
+          "greedy_ids": [
+            50,
+            1772,
+            12982,
+            339
+          ],
+          "greedy_text": "Siddharth",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "reset": {
+          "logprob_first": -8.51431655883789,
+          "prob_first": 0.000200576154811212,
+          "rank_first": 297,
+          "top1_id": 45,
+          "top1_text": "N",
+          "top1_logprob": -2.5143165588378906,
+          "greedy_ids": [
+            45,
+            13981
+          ],
+          "greedy_text": "Nathan",
+          "greedy_hit": false,
+          "greedy_exact": false
+        }
+      }
+    },
+    {
+      "name": "meridian-serial",
+      "statement": "The serial number of the Meridian relay is QX-4471-B.",
+      "question": "What is the serial number of the Meridian relay? Answer with the serial number only.",
+      "answer": "QX-4471-B",
+      "turn2_rendered": "<|im_start|>user\nWhat is the serial number of the Meridian relay? Answer with the serial number only.<|im_end|>\n<|im_start|>assistant\n",
+      "turn2_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        6146,
+        1372,
+        315,
+        279,
+        8755,
+        35642,
+        31851,
+        30,
+        21806,
+        448,
+        279,
+        6146,
+        1372,
+        1172,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "answer_ids": [
+        48,
+        55,
+        12,
+        19,
+        19,
+        22,
+        16,
+        7671
+      ],
+      "answer_tokens": [
+        "Q",
+        "X",
+        "-",
+        "4",
+        "4",
+        "7",
+        "1",
+        "-B"
+      ],
+      "first_answer_token": 48,
+      "answer_in_memo": true,
+      "statement_verbatim_in_memo": false,
+      "arms": {
+        "vanilla": {
+          "logprob_first": -12.025335311889648,
+          "prob_first": 5.990502186393973e-06,
+          "rank_first": 68,
+          "top1_id": 785,
+          "top1_text": "The",
+          "top1_logprob": -1.0878353118896484,
+          "greedy_ids": [
+            785,
+            3405,
+            4157,
+            387,
+            18577,
+            438,
+            10449,
+            13
+          ],
+          "greedy_text": "The question cannot be answered as presented.",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "sidecar": {
+          "logprob_first": -6.881824493408203,
+          "prob_first": 0.001026269913332102,
+          "rank_first": 31,
+          "top1_id": 16,
+          "top1_text": "1",
+          "top1_logprob": -1.2568244934082031,
+          "greedy_ids": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ],
+          "greedy_text": "12345678",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "reset": {
+          "logprob_first": -7.221927642822266,
+          "prob_first": 0.0007303931239454229,
+          "rank_first": 31,
+          "top1_id": 16,
+          "top1_text": "1",
+          "top1_logprob": -1.2219276428222656,
+          "greedy_ids": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ],
+          "greedy_text": "12345678",
+          "greedy_hit": false,
+          "greedy_exact": false
+        }
+      }
+    },
+    {
+      "name": "tamarind-train",
+      "statement": "The release train for the Tamarind service is called Saffron Lantern.",
+      "question": "What is the release train for the Tamarind service called? Answer with the name only.",
+      "answer": "Saffron Lantern",
+      "turn2_rendered": "<|im_start|>user\nWhat is the release train for the Tamarind service called? Answer with the name only.<|im_end|>\n<|im_start|>assistant\n",
+      "turn2_ids": [
+        151644,
+        872,
+        198,
+        3838,
+        374,
+        279,
+        4879,
+        5426,
+        369,
+        279,
+        350,
+        15554,
+        484,
+        2473,
+        2598,
+        30,
+        21806,
+        448,
+        279,
+        829,
+        1172,
+        13,
+        151645,
+        198,
+        151644,
+        77091,
+        198
+      ],
+      "answer_ids": [
+        50,
+        2649,
+        2248,
+        67492
+      ],
+      "answer_tokens": [
+        "S",
+        "aff",
+        "ron",
+        " Lantern"
+      ],
+      "first_answer_token": 50,
+      "answer_in_memo": true,
+      "statement_verbatim_in_memo": false,
+      "arms": {
+        "vanilla": {
+          "logprob_first": -8.376537322998047,
+          "prob_first": 0.00023020569491422006,
+          "rank_first": 3,
+          "top1_id": 51,
+          "top1_text": "T",
+          "top1_logprob": -0.001537322998046875,
+          "greedy_ids": [
+            51,
+            15554,
+            484,
+            17381,
+            26125
+          ],
+          "greedy_text": "Tamarind Release Train",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "sidecar": {
+          "logprob_first": -3.515838623046875,
+          "prob_first": 0.029722866218668344,
+          "rank_first": 2,
+          "top1_id": 51,
+          "top1_text": "T",
+          "top1_logprob": -0.390838623046875,
+          "greedy_ids": [
+            51,
+            15554,
+            484
+          ],
+          "greedy_text": "Tamarind",
+          "greedy_hit": false,
+          "greedy_exact": false
+        },
+        "reset": {
+          "logprob_first": -3.448575973510742,
+          "prob_first": 0.03179087520819007,
+          "rank_first": 2,
+          "top1_id": 51,
+          "top1_text": "T",
+          "top1_logprob": -0.3235759735107422,
+          "greedy_ids": [
+            51,
+            15554,
+            484
+          ],
+          "greedy_text": "Tamarind",
+          "greedy_hit": false,
+          "greedy_exact": false
+        }
+      }
+    }
+  ],
+  "turn1": {
+    "ids": 2010,
+    "elapsed_s": 3.6131949424743652,
+    "peak_memory_bytes": 3178052968,
+    "state_max_abs": 5.2878828048706055,
+    "state_mean_abs": 0.5872814431786537
+  },
+  "summary": {
+    "n_facts": 5,
+    "b_gt_a": 5,
+    "b_gt_c": 3,
+    "b_gt_a_and_b_gt_c": 3,
+    "mean_logprob_first": {
+      "vanilla": -11.96454734802246,
+      "sidecar": -5.594457626342773,
+      "reset": -5.734880447387695
+    },
+    "greedy_hits": {
+      "vanilla": 0,
+      "sidecar": 0,
+      "reset": 0
+    }
+  }
+}

@@ -1,0 +1,250 @@
+{
+  "kind": "delta-mem-mlx cost benchmark (Part D)",
+  "timestamp": "2026-10-19T10:23:31-0400",
+  "machine": {
+    "platform": "macOS-26.4.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "chip": "Apple M5 Max",
+    "cpu_cores": 18,
+    "memory_bytes": 137438953472,
+    "memory_gib": 128.0,
+    "python": "3.14.4",
+    "mlx": "0.32.3",
+    "mlx_lm": "0.32.0",
+    "device": "Device(gpu, 0)",
+    "mlx_memory_limit_bytes": 130567005798
+  },
+  "this_repo": {
+    "commit": "5747978bb9466a69b94dc32383e48edd739d2afb",
+    "dirty": true,
+    "head": "5747978 milestone 2b: strict per-module loader; cross-check vs independent MLX port (bit-identical); short-context persistence protocol (no memory effect beyond adapter)",
+    "note": "dirty = uncommitted changes in the working tree at run time"
+  },
+  "base_model": {
+    "path": "/Users/sailaupadhyayula/mlx-models/Qwen3-4B-Instruct-2507-4bit",
+    "load_s": 0.29885220527648926,
+    "active_memory_after_load_bytes": 2264693768
+  },
+  "adapter": {
+    "dir": "/Users/sailaupadhyayula/mlx-models/delta-mem-qwen3-4b-adapter",
+    "npz_sha256": "563c66de92b19ef45aba21edd2eaac2fbf0b0c3878ddb21ccfe7e78801b3ba7e",
+    "config_sha256": "4d1a46c0ec11b0779ab6b1242b3dac6c4141b2841a6e0314219faafa3025f8bc",
+    "load_s": 0.021461009979248047,
+    "layers": 36,
+    "r": 8,
+    "alpha": 16.0,
+    "sidecar_params": 4866336,
+    "active_memory_after_attach_bytes": 2284159112
+  },
+  "protocol": {
+    "prompt_tokens": 1024,
+    "decode_tokens": 128,
+    "repeats": 3,
+    "warmup": "one untimed prefill+decode per configuration before the timed repeats",
+    "prefill": "one forward over the prompt into a fresh KV cache; tok/s = prompt_tokens / wall time (mx.eval of the argmax and the cache)",
+    "decode": "greedy argmax, one token per forward through the KV cache, decode_tokens steps; tok/s = decode_tokens / wall time of the loop only",
+    "peak_memory": "mx.reset_peak_memory before each run, mx.get_peak_memory after prefill and after decode; per configuration the max over the three runs; includes the loaded weights",
+    "reported": "median of the three repeats",
+    "prompt": {
+      "seed_text": "The maintenance log for the coastal relay station records every inspection in the same order: power supply, antenna alignment, cable integrity, firmware version, and the signature of the technician on duty. Entries are kept for seven years and copied to the regional archive each quarter. When a reading falls outside its tolerance band the entry is flagged, a work order is opened, and the next inspection is brought forward by a week. ",
+      "construction": "seed repeated and cut to prompt_tokens ids; no chat template",
+      "ids_sha256": "d7f4298a0828fc5698dc622f0b1a7dc8ac29f9887e9023e242decdf0dd71b602"
+    },
+    "order": "vanilla measured first, then load_release_adapter on the same model object, then sidecar"
+  },
+  "vanilla": {
+    "warmup": {
+      "prefill_s": 0.2964992499910295,
+      "prefill_tok_s": 3453.63436848822,
+      "decode_s": 0.8317154999822378,
+      "decode_tok_s": 153.89877909301146,
+      "peak_memory_bytes": 3404237888,
+      "peak_memory_after_prefill_bytes": 3404237888,
+      "generated_ids_head": [
+        369,
+        8094,
+        1635,
+        323,
+        21774,
+        311,
+        279,
+        15130
+      ],
+      "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+    },
+    "runs": [
+      {
+        "prefill_s": 0.16565316601190716,
+        "prefill_tok_s": 6181.5902747454575,
+        "decode_s": 0.8089645000291057,
+        "decode_tok_s": 158.22696792676896,
+        "peak_memory_bytes": 3404237888,
+        "peak_memory_after_prefill_bytes": 3404237888,
+        "generated_ids_head": [
+          369,
+          8094,
+          1635,
+          323,
+          21774,
+          311,
+          279,
+          15130
+        ],
+        "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+      },
+      {
+        "prefill_s": 0.1648265410331078,
+        "prefill_tok_s": 6212.591695376989,
+        "decode_s": 0.808857458003331,
+        "decode_tok_s": 158.2479072591711,
+        "peak_memory_bytes": 3404237888,
+        "peak_memory_after_prefill_bytes": 3404237888,
+        "generated_ids_head": [
+          369,
+          8094,
+          1635,
+          323,
+          21774,
+          311,
+          279,
+          15130
+        ],
+        "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+      },
+      {
+        "prefill_s": 0.1648966670036316,
+        "prefill_tok_s": 6209.949652757069,
+        "decode_s": 0.8093389580026269,
+        "decode_tok_s": 158.1537608369824,
+        "peak_memory_bytes": 3404237888,
+        "peak_memory_after_prefill_bytes": 3404237888,
+        "generated_ids_head": [
+          369,
+          8094,
+          1635,
+          323,
+          21774,
+          311,
+          279,
+          15130
+        ],
+        "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+      }
+    ],
+    "median": {
+      "prefill_tok_s": 6209.949652757069,
+      "prefill_s": 0.1648966670036316,
+      "decode_tok_s": 158.22696792676896,
+      "decode_s": 0.8089645000291057
+    },
+    "peak_memory_bytes": 3404237888,
+    "peak_memory_gib": 3.170443594455719,
+    "greedy_output_identical_across_runs": true
+  },
+  "sidecar": {
+    "warmup": {
+      "prefill_s": 1.5272614170098677,
+      "prefill_tok_s": 670.4811557440031,
+      "decode_s": 1.1359303329954855,
+      "decode_tok_s": 112.68296679996193,
+      "peak_memory_bytes": 2885957420,
+      "peak_memory_after_prefill_bytes": 2885957420,
+      "generated_ids_head": [
+        369,
+        8094,
+        1635,
+        323,
+        21774,
+        311,
+        279,
+        15130
+      ],
+      "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+    },
+    "runs": [
+      {
+        "prefill_s": 1.4135052499477752,
+        "prefill_tok_s": 724.4401816249595,
+        "decode_s": 1.1396530420170166,
+        "decode_tok_s": 112.31488468934283,
+        "peak_memory_bytes": 2885957420,
+        "peak_memory_after_prefill_bytes": 2885957420,
+        "generated_ids_head": [
+          369,
+          8094,
+          1635,
+          323,
+          21774,
+          311,
+          279,
+          15130
+        ],
+        "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+      },
+      {
+        "prefill_s": 1.4043125419993885,
+        "prefill_tok_s": 729.1824073165943,
+        "decode_s": 1.1333484170027077,
+        "decode_tok_s": 112.93967334291887,
+        "peak_memory_bytes": 2885957420,
+        "peak_memory_after_prefill_bytes": 2885957420,
+        "generated_ids_head": [
+          369,
+          8094,
+          1635,
+          323,
+          21774,
+          311,
+          279,
+          15130
+        ],
+        "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+      },
+      {
+        "prefill_s": 1.3934992909780703,
+        "prefill_tok_s": 734.8407039958191,
+        "decode_s": 1.1385422500316054,
+        "decode_tok_s": 112.42446206668815,
+        "peak_memory_bytes": 2885957420,
+        "peak_memory_after_prefill_bytes": 2885957420,
+        "generated_ids_head": [
+          369,
+          8094,
+          1635,
+          323,
+          21774,
+          311,
+          279,
+          15130
+        ],
+        "generated_ids_sha256": "e1e6b9a2f1bcc1b07896fc8531652302093cd281f6c058efb692ee456b8c030b"
+      }
+    ],
+    "median": {
+      "prefill_tok_s": 729.1824073165943,
+      "prefill_s": 1.4043125419993885,
+      "decode_tok_s": 112.42446206668815,
+      "decode_s": 1.1385422500316054
+    },
+    "peak_memory_bytes": 2885957420,
+    "peak_memory_gib": 2.687757294625044,
+    "greedy_output_identical_across_runs": true
+  },
+  "summary": {
+    "prefill_tok_s": {
+      "vanilla": 6209.949652757069,
+      "sidecar": 729.1824073165943,
+      "sidecar_over_vanilla": 0.11742162949628018
+    },
+    "decode_tok_s": {
+      "vanilla": 158.22696792676896,
+      "sidecar": 112.42446206668815,
+      "sidecar_over_vanilla": 0.7105265527095277
+    },
+    "peak_memory_gib": {
+      "vanilla": 3.170443594455719,
+      "sidecar": 2.687757294625044,
+      "sidecar_minus_vanilla_mib": -494.2707710266113
+    }
+  }
+}
