@@ -3,4 +3,4 @@ from .sidecar import (DeltaMemConfig, Sidecar, attach, detach, reset, get_states
                       set_states, set_gate_scale, sidecar_parameters, save_sidecar,
                       load_sidecar, count_parameters, load_release_adapter, release_weights)
 
-__version__ = "0.1.0-m1"
+__version__ = "0.2.0"

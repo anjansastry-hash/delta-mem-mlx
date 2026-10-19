@@ -6,13 +6,20 @@ same Qwen3-4B backbone, the same released adapter and the same chat-templated to
   python tests/test_crosscheck.py --base <dir> --adapter <dir> --ref <clone>
 
 Runs scripts/crosscheck.py in-process (both ports loaded, prefill only, no sampling), writes
-results/crosscheck.json and asserts, for each of the three prompts,
+results/crosscheck.latest.json — never the committed results/crosscheck.json — and asserts,
+for each of the three prompts,
   1. max|Δ| of the final-position logits ≤ 0.05,
-  2. the top-1 token is the same.
+  2. the top-1 token is the same,
+and then, against the committed results/crosscheck.json,
+  3. REPRO  same inputs (adapter sha256, reference commit, prompt ids) and the same outcome
+            (per-prompt max|Δ|, top-1 ids, backbone-only max|Δ|, first divergent layer).
+The committed file is refreshed only by running scripts/crosscheck.py on purpose; this test
+refuses --out pointing at it.
 Per-layer memory-state cosine is printed, not asserted. A max|Δ| above 0.05 but ≤ 0.5 is still
 RED and gets a WARN line: that band is what bf16 rounding noise looks like (one bf16 ulp of a
 logit near 32 is 0.25), as opposed to a maths divergence, which is what the 0.05 contract is for.
-Exit 0 = GREEN, 1 = RED, 77 = SKIP (weights or the reference clone are not on disk).
+Exit 0 = GREEN, 1 = RED, 77 = SKIP (weights or the reference clone are not on disk),
+2 = --out names the committed file.
 Nothing here changes either port. A disagreement is a finding: results/crosscheck.json records
 the first layer whose hidden state differs and whether it enters via the q hook, the o hook, the
 recurrence or the attention body.
@@ -20,6 +27,7 @@ recurrence or the attention body.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import traceback
@@ -29,6 +37,9 @@ import crosscheck  # noqa: E402
 
 GREEN, RED, WARN = "\033[32mGREEN\033[0m", "\033[31mRED\033[0m", "\033[33mWARN\033[0m"
 PASS_TOL, WARN_TOL = 0.05, 0.5
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+DEFAULT_OUT = os.path.join(ROOT, "results", "crosscheck.latest.json")   # this run
+DEFAULT_COMMITTED = os.path.join(ROOT, "results", "crosscheck.json")    # the published result, read only
 
 
 def check(name, ok, detail=""):
@@ -36,13 +47,49 @@ def check(name, ok, detail=""):
     return ok
 
 
+def compare_to_committed(doc, committed):
+    """Does this run reproduce the committed result? Returns (input differences, outcome differences),
+    both lists of strings; empty = identical. Inputs: adapter sha256, reference commit, prompt ids.
+    Outcome: per prompt, max|Δ| of the final logits, the two top-1 ids, the backbone-only max|Δ| and
+    the first divergent layer; plus the two summary scalars. Timings, timestamps, machine and the
+    repo commit are not compared."""
+    inputs = (("adapter sha256", committed["adapter"]["npz_sha256"], doc["adapter"]["npz_sha256"]),
+              ("reference commit", committed["reference"]["commit"], doc["reference"]["commit"]),
+              ("prompt ids", [p["ids"] for p in committed["prompts"]], [p["ids"] for p in doc["prompts"]]))
+    diff_in = [f"{k}: committed {str(a)[:48]} vs now {str(b)[:48]}" for k, a, b in inputs if a != b]
+    diff_out = []
+    by_name = {p["name"]: p for p in committed["prompts"]}
+    for p in doc["prompts"]:
+        c = by_name.get(p["name"])
+        if c is None:
+            diff_out.append(f"{p['name']}: not in the committed file")
+            continue
+        for label, a, b in (("max|Δ logit|", c["final_logits"]["max_abs_delta"], p["final_logits"]["max_abs_delta"]),
+                            ("top-1 A", c["final_logits"]["top1_a"], p["final_logits"]["top1_a"]),
+                            ("top-1 B", c["final_logits"]["top1_b"], p["final_logits"]["top1_b"]),
+                            ("backbone-only max|Δ|", c["backbone_only"]["max_abs_delta"], p["backbone_only"]["max_abs_delta"]),
+                            ("first divergent layer", c["divergence"]["first_divergent_layer"], p["divergence"]["first_divergent_layer"])):
+            if a != b:
+                diff_out.append(f"{p['name']} {label}: committed {a} vs now {b}")
+    for label, a, b in (("max|Δ logit| over prompts", committed["summary"]["max_abs_delta_final_logits"], doc["summary"]["max_abs_delta_final_logits"]),
+                        ("all top-1 match", committed["summary"]["all_top1_match"], doc["summary"]["all_top1_match"])):
+        if a != b:
+            diff_out.append(f"summary {label}: committed {a} vs now {b}")
+    return diff_in, diff_out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default=crosscheck.DEFAULT_BASE)
     ap.add_argument("--adapter", default=crosscheck.DEFAULT_ADAPTER)
     ap.add_argument("--ref", default=crosscheck.DEFAULT_REF, help=f"clone of {crosscheck.REF_URL}")
-    ap.add_argument("--out", default=crosscheck.DEFAULT_OUT)
+    ap.add_argument("--out", default=DEFAULT_OUT, help="where this run is written (default results/crosscheck.latest.json)")
+    ap.add_argument("--committed", default=DEFAULT_COMMITTED, help="the committed result to reproduce (read only)")
     args = ap.parse_args()
+
+    if os.path.abspath(args.out) == os.path.abspath(args.committed):
+        print(f"refusing to overwrite the committed results at {args.committed}; refresh them with scripts/crosscheck.py")
+        sys.exit(2)
 
     missing = crosscheck.missing_inputs(args.base, args.adapter, args.ref)
     if missing:
@@ -85,7 +132,22 @@ def main():
         if d > PASS_TOL or not f["top1_match"]:
             print(f"           first divergence: {p['divergence']['attribution']}")
 
-    print(f"\nRESULT: {GREEN if ok else RED}   (details: {args.out})")
+    if os.path.isfile(args.committed):
+        with open(args.committed, encoding="utf-8") as fh:
+            committed = json.load(fh)
+        diff_in, diff_out = compare_to_committed(doc, committed)
+        rel = os.path.relpath(args.committed, ROOT)
+        ok &= check("REPRO    same inputs as committed ", not diff_in,
+                    f"{rel}: " + ("adapter sha256, reference commit and prompt ids match" if not diff_in else "; ".join(diff_in)))
+        ok &= check("REPRO    same outcome as committed", not diff_out,
+                    "per-prompt max|Δ|, top-1 ids, backbone-only max|Δ| and first divergent layer match" if not diff_out else "; ".join(diff_out))
+        cs, ds = committed["summary"], doc["summary"]
+        print(f"           not asserted: min state cosine committed {cs['min_state_cosine']:.12f} vs now {ds['min_state_cosine']:.12f}; "
+              f"max|ΔS| committed {cs['max_state_abs_delta']:.3g} vs now {ds['max_state_abs_delta']:.3g}")
+    else:
+        print(f"  {WARN}   REPRO    no committed results at {args.committed}; nothing to compare against")
+
+    print(f"\nRESULT: {GREEN if ok else RED}   (this run: {args.out}; committed: {args.committed}, untouched)")
     sys.exit(0 if ok else 1)
 
 
